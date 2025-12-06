@@ -1,4 +1,4 @@
-import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI, Chat, GenerateContentResponse, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from '../constants';
 
 let chatSession: Chat | null = null;
@@ -7,7 +7,11 @@ let genAI: GoogleGenAI | null = null;
 const getAIInstance = (): GoogleGenAI => {
   if (!genAI) {
     // API Key must be provided via environment variable as per instructions
-    genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+    if (!apiKey) {
+      console.error("VITE_GOOGLE_API_KEY is not set in environment variables.");
+    }
+    genAI = new GoogleGenAI({ apiKey: apiKey || '' });
   }
   return genAI;
 };
@@ -22,10 +26,10 @@ export const initializeChat = (): void => {
       maxOutputTokens: 2048, // Increased to prevent cut-offs mid-paragraph
       // Adjust safety settings to avoid over-blocking political discourse
       safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH }
       ]
     },
   });
